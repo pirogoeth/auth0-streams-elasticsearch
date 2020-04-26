@@ -20,7 +20,8 @@ RUN apk add --no-cache build-base libffi-dev && \
 FROM ${PYTHON_REPO}:${PYTHON_TAG}
 LABEL maintainer="Sean Johnson <sean@maio.me>"
 
-RUN mkdir /wheels
+RUN mkdir /wheels && \
+        apk add --no-cache libstdc++
 COPY --from=build /source/dist/* /wheels/
 
 RUN pip install /wheels/*
