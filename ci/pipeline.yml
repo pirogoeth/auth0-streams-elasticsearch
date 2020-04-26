@@ -21,7 +21,7 @@ resources:
     tag: (( grab meta.upstream.python.tag ))
     .: (( inject meta.upstream.python.auth ))
 
-- name: (( concat meta.name ))
+- name: (( grab meta.name ))
   type: registry-image
   icon: docker
   source:
