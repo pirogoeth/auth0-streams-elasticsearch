@@ -60,7 +60,7 @@ class ReceiverService(AIOHTTPService):
 
         batcher: Batcher = await self.context["batcher"]
 
-        events = map(self.transform_event, events)
+        events = map(self.transform_event, events.get("logs", []))
         coros = map(batcher.insert, events)
         return await asyncio.gather(coros)
 
