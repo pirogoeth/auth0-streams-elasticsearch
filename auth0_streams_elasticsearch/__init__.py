@@ -44,7 +44,7 @@ def start():
         sender.SenderService(
             client=c,
             send_after_time=s.SEND_AFTER_TIME,
-            send_after_n_events=s.SEND_AFTER_N_EVENTS,
+            send_after_n_events=s.SEND_AFTER_EVENTS,
             send_loop_wait=s.SEND_LOOP_WAIT,
         ),
     ]
