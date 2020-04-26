@@ -35,6 +35,7 @@ class ReceiverService(AIOHTTPService):
     async def handler(self, request: web.Request) -> web.Response:
 
         auth = request.headers.get("authorization")
+        logger.debug(f"auth header {auth}")
         if not auth or not compare_digest(f"Bearer {self.bearer_token}", auth):
             return web.HTTPForbidden()
 
