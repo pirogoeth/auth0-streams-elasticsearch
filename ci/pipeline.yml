@@ -67,5 +67,12 @@ jobs:
     params:
       image: image/image.tar
       additional_tags: metadata/additional_tags
+
+- name: "deploy"
+  public: false
+  plan:
+  - get: (( grab meta.name ))
+    passed: ["build"]
+    trigger: true
   - put: deploy
     params: {}
