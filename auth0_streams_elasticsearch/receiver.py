@@ -35,7 +35,6 @@ class ReceiverService(AIOHTTPService):
     async def handler(self, request: web.Request) -> web.Response:
 
         auth = request.headers.get("authorization")
-        logger.debug(f"auth header {auth}")
         if not auth or not compare_digest(f"Bearer {self.bearer_token}", auth):
             return web.HTTPForbidden()
 
@@ -62,7 +61,7 @@ class ReceiverService(AIOHTTPService):
         batcher: Batcher = await self.context["batcher"]
 
         events = map(self.transform_event, events.get("logs", []))
-        coros = map(batcher.insert, events)
+        coros = [batcher.insert(evt) for evt in events]
         return await asyncio.gather(coros)
 
     def transform_event(self, event: dict) -> dict:

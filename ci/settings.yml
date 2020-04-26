@@ -7,6 +7,9 @@ meta:
   pipeline: auth0-streams-elasticsearch
   version:  v0.1.0
 
+  deploy:
+    webhook_url: ((auth0_streams_elasticsearch.deploy_webhook_url))
+
   registry:
     repository: containers.dev.maio.me
     auth:

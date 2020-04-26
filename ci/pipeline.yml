@@ -1,5 +1,12 @@
 ---
 
+resource_types:
+- name: http-api
+  type: registry-image
+  source:
+    repository: containers.dev.maio.me/concourse/http-api-resource
+    tag: latest
+
 resources:
 - name: commons
   type: git
@@ -28,6 +35,12 @@ resources:
     repository: (( grab meta.registry.image.repo ))
     tag: (( grab meta.registry.image.tag ))
     .: (( inject meta.registry.auth ))
+
+- name: deploy
+  type: http-api
+  source:
+    uri: "(( grab meta.deploy.webhook_url ))"
+    method: "POST"
 
 jobs:
 - name: "build"
