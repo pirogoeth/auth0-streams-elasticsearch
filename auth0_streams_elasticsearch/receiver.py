@@ -62,7 +62,7 @@ class ReceiverService(AIOHTTPService):
 
         events = map(self.transform_event, events.get("logs", []))
         coros = [batcher.insert(evt) for evt in events]
-        return await asyncio.gather(coros)
+        return await asyncio.gather(*coros)
 
     def transform_event(self, event: dict) -> dict:
         """ Adds the long-form description of the type identifier,
