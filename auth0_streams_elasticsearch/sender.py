@@ -20,7 +20,7 @@ class SenderService(aiomisc.Service):
     send_after_time: int
     send_loop_wait: float
     tasks: List[asyncio.Task] = []
-    _stop: asyncio.Event
+    _stop: asyncio.Event = asyncio.Event()
 
     __required__ = frozenset([
         "client",
