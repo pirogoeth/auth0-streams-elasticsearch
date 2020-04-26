@@ -50,7 +50,7 @@ jobs:
     file: (( grab meta.tasks.img-write-tags ))
     params:
       TAGS: (( grab meta.version ))
-  - put: icestats_exporter
+  - put: (( concat meta.name " image" ))
     params:
       image: image/image.tar
       additional_tags: metadata/additional_tags
