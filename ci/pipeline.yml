@@ -1,0 +1,56 @@
+---
+
+resources:
+- name: commons
+  type: git
+  icon: git
+  source:
+    .: (( inject meta.upstream.commons ))
+
+- name: source
+  type: git
+  icon: git
+  source:
+    .: (( inject meta.repository.source ))
+
+- name: python
+  type: registry-image
+  icon: docker
+  source:
+    repository: (( grab meta.upstream.python.repo ))
+    tag: (( grab meta.upstream.python.tag ))
+    .: (( inject meta.upstream.python.auth ))
+
+- name: icestats_exporter
+  type: registry-image
+  icon: docker
+  source:
+    repository: (( grab meta.registry.image.repo ))
+    tag: (( grab meta.registry.image.tag ))
+    .: (( inject meta.registry.auth ))
+
+jobs:
+- name: "build"
+  public: true
+  plan:
+  - get: commons
+  - get: source
+    trigger: true
+  - get: python
+    trigger: true
+  - task: "build image"
+    file: (( grab meta.tasks.img-build-oci ))
+    privileged: true
+    input_mapping: {context: source}
+    params:
+      CONTEXT: (( grab meta.registry.image.context ))
+      BUILD_ARG_PYTHON_REPO: (( grab meta.upstream.python.repo ))
+      BUILD_ARG_PYTHON_TAG: (( grab meta.upstream.python.tag ))
+  - task: "write image tags"
+    file: (( grab meta.tasks.img-write-tags ))
+    params:
+      TAGS: (( grab meta.version ))
+  - put: icestats_exporter
+    params:
+      image: image/image.tar
+      additional_tags: metadata/additional_tags

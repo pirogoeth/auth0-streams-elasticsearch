@@ -1,0 +1,12 @@
+README.md
+setup.py
+auth0_streams_elasticsearch/__init__.py
+auth0_streams_elasticsearch/client.py
+auth0_streams_elasticsearch/receiver.py
+auth0_streams_elasticsearch/settings.py
+auth0_streams_elasticsearch.egg-info/PKG-INFO
+auth0_streams_elasticsearch.egg-info/SOURCES.txt
+auth0_streams_elasticsearch.egg-info/dependency_links.txt
+auth0_streams_elasticsearch.egg-info/entry_points.txt
+auth0_streams_elasticsearch.egg-info/requires.txt
+auth0_streams_elasticsearch.egg-info/top_level.txt

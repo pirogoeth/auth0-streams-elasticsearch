@@ -1,0 +1,3 @@
+[console_scripts]
+auth0-streams-elasticsearch = auth0_streams_elasticsearch:start
+

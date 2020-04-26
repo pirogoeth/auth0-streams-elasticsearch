@@ -1,0 +1,36 @@
+meta:
+  target:   glow
+  url:      https://concourse.dev.maio.me
+  team:     main
+
+  name:     auth0-streams-elasticsearch
+  pipeline: auth0-streams-elasticsearch
+  version:  v0.1.0
+
+  registry:
+    repository: containers.dev.maio.me
+    auth:
+      username: ((glow_registry_ci.username))
+      password: ((glow_registry_ci.password))
+    image:
+      context: .
+      repo: (( concat meta.registry.repository "/seanj/auth0-streams-elasticsearch" ))
+      tag: latest
+
+  repository:
+    source:
+      uri: https://glow.dev.maio.me/seanj/auth0-streams-elasticsearch.git
+      branch: master
+
+  tasks:
+    img-build-oci: commons/tasks/img/build-oci.yml
+    img-write-tags: commons/tasks/img/write-tags.yml
+
+  upstream:
+    commons:
+      uri: "https://glow.dev.maio.me/containers/commons.git"
+      branch: "master"
+    python:
+      repo: "containers.dev.maio.me/library/python"
+      tag: "3.8.2"
+      auth: {}

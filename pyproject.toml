@@ -1,0 +1,34 @@
+[tool.poetry]
+name = "auth0-streams-elasticsearch"
+version = "0.1.0"
+description = "Receives Streams webhooks from Auth0 and forwards the events to Elasticsearch"
+authors = ["Sean Johnson <sean@maio.me>"]
+license = "MIT"
+
+[tool.poetry.dependencies]
+python = "^3.8"
+aiohttp = "^3.6.2"
+aioelasticsearch = "^0.6.0"
+loguru = "^0.4.1"
+elasticsearch = ">=7.0.0,<8.0.0"
+aiomisc = "^9.7.5"
+ujson = "^2.0.3"
+
+[tool.poetry.dev-dependencies]
+black = "^19.10b0"
+flake8 = "^3.7.9"
+pylint = "^2.4.4"
+mypy = "^0.761"
+wheel = "^0.34.2"
+
+[tool.black]
+line-length = 88
+target-version = ["py37", "py38"]
+include = ".pyi?$"
+
+[tool.poetry.scripts]
+auth0-streams-elasticsearch = "auth0_streams_elasticsearch:start"
+
+[build-system]
+requires = ["poetry>=0.12"]
+build-backend = "poetry.masonry.api"
