@@ -21,7 +21,7 @@ resources:
     tag: (( grab meta.upstream.python.tag ))
     .: (( inject meta.upstream.python.auth ))
 
-- name: icestats_exporter
+- name: (( concat meta.name ))
   type: registry-image
   icon: docker
   source:
@@ -50,7 +50,7 @@ jobs:
     file: (( grab meta.tasks.img-write-tags ))
     params:
       TAGS: (( grab meta.version ))
-  - put: (( concat meta.name " image" ))
+  - put: (( grab meta.name ))
     params:
       image: image/image.tar
       additional_tags: metadata/additional_tags
