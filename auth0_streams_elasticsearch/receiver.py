@@ -27,7 +27,7 @@ class ReceiverService(AIOHTTPService):
 
         app = web.Application()
         app.add_routes([
-            web.post("/api/ingest", self.handler),
+            web.post("/", self.handler),
         ])
 
         return app
