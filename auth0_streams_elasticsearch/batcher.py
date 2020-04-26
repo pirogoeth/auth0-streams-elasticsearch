@@ -23,6 +23,9 @@ class Batcher:
         self._lock = asyncio.Lock()
 
     async def insert(self, event: dict):
+        """ Inserts a single event into the queue.
+        """
+
         async with self._lock:
             self.queue.append(event)
 
@@ -58,6 +61,9 @@ class BatcherService(aiomisc.Service):
     queue_max_size: int = 200
 
     async def start(self):
+        """ Registers the batcher instance into the application context.
+        """
+
         batcher = Batcher(
             queue_max_size=self.queue_max_size,
         )

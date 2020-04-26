@@ -30,6 +30,7 @@ def start():
     logger.add(sys.stdout, serialize=True)
 
     s = settings.Settings()
+    c = client.init(s)
 
     services = [
         batcher.BatcherService(
@@ -41,6 +42,7 @@ def start():
             port=s.BIND_PORT,
         ),
         sender.SenderService(
+            client=c,
             send_after_time=s.SEND_AFTER_TIME,
             send_after_n_events=s.SEND_AFTER_N_EVENTS,
             send_loop_wait=s.SEND_LOOP_WAIT,

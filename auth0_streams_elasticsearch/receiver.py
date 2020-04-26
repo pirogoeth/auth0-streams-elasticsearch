@@ -23,6 +23,7 @@ class ReceiverService(AIOHTTPService):
     bearer_token: str
 
     async def create_application(self) -> web.Application:
+
         app = web.Application()
         app.add_routes([
             web.post("/api/ingest", self.handler),
@@ -31,6 +32,7 @@ class ReceiverService(AIOHTTPService):
         return app
 
     async def handler(self, request: web.Request) -> web.Response:
+
         batcher: Batcher = await self.context["batcher"]
 
         auth = request.headers.get("authorization")
@@ -52,6 +54,10 @@ class ReceiverService(AIOHTTPService):
             return web.HTTPBadRequest()
 
     def transform_event(self, event: dict) -> dict:
+        """ Adds the long-form description of the type identifier,
+            along with any other transforms that should happen
+        """
+
         data = event["data"]
         data["type_description"] = LOG_TYPES.get(
             data["type"], {}

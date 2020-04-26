@@ -3,6 +3,7 @@
 import asyncio
 import time
 from datetime import timedelta
+from typing import List
 
 import aiomisc
 from loguru import logger
@@ -14,16 +15,24 @@ from .settings import Settings
 
 class SenderService(aiomisc.Service):
 
+    client: Client
+    send_after_events: int
+    send_after_time: int
+    send_loop_wait: float
     tasks: List[asyncio.Task] = []
     _stop: asyncio.Event
 
     __required__ = frozenset([
+        "client",
         "send_after_events",
         "send_after_time",
         "send_loop_wait",
     ])
 
     async def start(self):
+        """ The main loop of the sending service
+        """
+
         self.start_event.set()
 
         batcher: Batcher = await self.context["batcher"]
@@ -41,7 +50,7 @@ class SenderService(aiomisc.Service):
             if not (await batcher.is_empty()):
                 if await batcher.remaining() > self.send_after_events:
                     events = await batcher.get_batch(self.send_after_events)
-                elif (now := time.monotonic()) > (begin + self.send_after_time):
+                elif time.monotonic() > (begin + self.send_after_time):
                     events = await batcher.get_batch(self.send_after_events)
 
                 if events is not None:
@@ -49,12 +58,16 @@ class SenderService(aiomisc.Service):
                     self.tasks.append(asyncio.create_task(self.send(events)))
 
             await self.poll_sending_tasks()
-            await asyncio.sleep(self.send_sleep_wait)
+            await asyncio.sleep(self.send_loop_wait)
 
         self._stop.clear()
         logger.debug("Sender loop closing")
 
     async def stop(self):
+        """ Stops the main loop of the sending service and waits for all
+            pending tasks to complete.
+        """
+
         self._stop.set()
 
         # Once the sending loop stops, we'll handle polling the tasks to completion.
@@ -65,9 +78,13 @@ class SenderService(aiomisc.Service):
             await self.poll_sending_tasks()
 
     async def poll_sending_tasks(self):
+        """ Poll all tasks attached to this sender instance and update
+            the list of tasks as they are finished.
+        """
+
         next_tasks = []
         for task in self.tasks:
-            task_log = logger.bind(task=task, type="sending_task")
+            task_log = logger.bind(task=task)
             try:
                 result = await task.result()
                 task_log.debug(f"Completed successfully with result {result}")
@@ -80,4 +97,15 @@ class SenderService(aiomisc.Service):
         self.tasks = next_tasks
 
     async def send(self, batch: List[dict]):
-        """ 
+        """ Given a batch of events, bulk-submits them to Elasticsearch
+            via the client.
+        """
+
+        # This is the bulk API response from Elasticsearch
+        response = await self.client.send(batch)
+
+        # Check for errors
+        if response["errors"]:
+            logger.bind(response=response).error("Elasticsearch encountered errors ingesting events")
+
+        return response

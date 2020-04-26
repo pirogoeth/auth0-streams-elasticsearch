@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 LOG_TYPES = {
     "s": {"event": "Success Login", "level": 1},  # Info
     "seacft": {"event": "Success Exchange", "level": 1},  # Info
