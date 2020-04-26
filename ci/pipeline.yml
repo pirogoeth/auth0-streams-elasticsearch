@@ -67,3 +67,5 @@ jobs:
     params:
       image: image/image.tar
       additional_tags: metadata/additional_tags
+  - put: deploy
+    params: {}
