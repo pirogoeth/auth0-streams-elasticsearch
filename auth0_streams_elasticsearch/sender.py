@@ -33,7 +33,7 @@ class SenderService(aiomisc.Service):
         """ The main loop of the sending service
         """
 
-        self.start_event.set()
+        logger.info("Sender started!")
 
         batcher: Batcher = await self.context["batcher"]
         begin = time.monotonic()

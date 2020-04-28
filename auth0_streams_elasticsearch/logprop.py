@@ -16,4 +16,4 @@ class InterceptHandler(logging.Handler):
 
 def install():
 
-    logging.basicConfig(handlers=[InterceptHandler()], level=0)
+    logging.basicConfig(handlers=[InterceptHandler()], level=logging.DEBUG)
