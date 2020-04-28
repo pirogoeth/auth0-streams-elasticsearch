@@ -55,6 +55,7 @@ class SenderService(aiomisc.Service):
 
                 if events is not None:
                     begin = time.monotonic()
+                    logger.debug(f"Starting task to ship {len(events)} events")
                     self.tasks.append(asyncio.create_task(self.send(events)))
 
             await self.poll_sending_tasks()
