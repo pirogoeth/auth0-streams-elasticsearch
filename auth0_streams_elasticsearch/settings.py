@@ -27,14 +27,14 @@ class Settings:
         "BIND_ADDRESS": "0.0.0.0",
         "BIND_PORT": "3000",
         "ELASTICSEARCH_INDEX_NAME": "auth0-events-%Y.%m.%d",
-        "ELASTICSEARCH_PASSWORD": None,
+        "ELASTICSEARCH_PASSWORD": "",
         "ELASTICSEARCH_SSL_VERIFY": "true",
         "ELASTICSEARCH_URL": "http://localhost:9200",
-        "ELASTICSEARCH_USERNAME": None,
+        "ELASTICSEARCH_USERNAME": "",
+        "LOG_LEVEL": "INFO",
         "QUEUE_MAX_SIZE": "50",
         "SEND_AFTER_EVENTS": "10",
         "SEND_AFTER_TIME": "5",
-        "SEND_LOOP_WAIT": "1e7",
     }
 
     converters = {
@@ -44,7 +44,6 @@ class Settings:
         "QUEUE_MAX_TIME": int,
         "SEND_AFTER_EVENTS": int,
         "SEND_AFTER_TIME": int,
-        "SEND_LOOP_WAIT": float,
     }
 
     def __init__(self):

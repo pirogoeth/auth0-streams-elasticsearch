@@ -2,7 +2,7 @@
 
 import asyncio
 from collections import deque
-from typing import List
+from typing import Iterable, List
 
 import aiomisc
 from loguru import logger
@@ -29,6 +29,13 @@ class Batcher:
         async with self._lock:
             self.queue.append(event)
 
+    async def insert_many(self, events: Iterable[dict]):
+        """ Inserts a number of events into the queue
+        """
+
+        async with self._lock:
+            self.queue.extend(events)
+
     async def get_batch(self, batch_size: int) -> List[dict]:
         """ Returns a batch of events up to `batch_size`.
             If there are not `batch_size` elements in the deque,
@@ -46,7 +53,7 @@ class Batcher:
         """
 
         async with self._lock:
-            return len(self.queue) > 0
+            return len(self.queue) == 0
 
     async def remaining(self) -> int:
         """ Returns the number of events in the queue

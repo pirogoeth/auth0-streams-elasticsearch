@@ -15,18 +15,15 @@ from .settings import Settings
 
 class SenderService(aiomisc.Service):
 
-    client: Client
     send_after_events: int
     send_after_time: int
-    send_loop_wait: float
+    send_loop_wait: float = 0.1
     tasks: List[asyncio.Task] = []
     _stop: asyncio.Event = asyncio.Event()
 
     __required__ = frozenset([
-        "client",
         "send_after_events",
         "send_after_time",
-        "send_loop_wait",
     ])
 
     async def start(self):
@@ -40,6 +37,7 @@ class SenderService(aiomisc.Service):
         while not self._stop.is_set():
             # During this loop, we need to keep track of time.
             # Each iteration, we will need to do a few things:
+            # - If the timer is None and the batcher has items, start the timer.
             # - Check if there's a current batch that's larger than `self.send_after_events`
             #   - If greater, get the batch, send, and update begin time.
             # - Check if the current time is greater than `begin + self.send_after_time`
@@ -48,15 +46,27 @@ class SenderService(aiomisc.Service):
             # - Sleep for a short amount of time and continue.
             events = None
             if not (await batcher.is_empty()):
-                if await batcher.remaining() > self.send_after_events:
-                    events = await batcher.get_batch(self.send_after_events)
-                elif time.monotonic() > (begin + self.send_after_time):
-                    events = await batcher.get_batch(self.send_after_events)
-
-                if events is not None:
+                # Non-empty batcher triggers the timer
+                if begin is None:
                     begin = time.monotonic()
-                    logger.debug(f"Starting task to ship {len(events)} events")
-                    self.tasks.append(asyncio.create_task(self.send(events)))
+                    await asyncio.sleep(self.send_loop_wait)
+                    continue
+
+                if (items := await batcher.remaining()) > self.send_after_events:
+                    logger.debug(f"Fetching batch due to {items} queue > {self.send_after_events} threshold")
+                    events = await batcher.get_batch(self.send_after_events)
+                elif (now := time.monotonic()) > (begin + self.send_after_time):
+                    logger.debug(f"Fetching batch due to time trigger ({now} > {begin} + {self.send_after_time})")
+                    events = await batcher.get_batch(self.send_after_events)
+                else:
+                    logger.debug("Wait for threshold")
+                    await asyncio.sleep(self.send_loop_wait)
+                    continue
+
+                # Ship the events and restart the timer
+                begin = None
+                logger.debug(f"Starting task to ship {len(events)} events")
+                self.tasks.append(self.loop.create_task(self.send(events)))
 
             await self.poll_sending_tasks()
             await asyncio.sleep(self.send_loop_wait)
@@ -77,6 +87,7 @@ class SenderService(aiomisc.Service):
         while self.tasks:
             logger.info(f"Waiting for pending tasks to complete.. ({len(self.tasks)} remaining)")
             await self.poll_sending_tasks()
+            await asyncio.sleep(1)
 
     async def poll_sending_tasks(self):
         """ Poll all tasks attached to this sender instance and update
@@ -88,22 +99,24 @@ class SenderService(aiomisc.Service):
             task_log = logger.bind(task=task)
             try:
                 result = await task.result()
-                task_log.debug(f"Completed successfully with result {result}")
+                task_log.debug(f"Completed successfully with result: {result}")
             except asyncio.InvalidStateError:
                 task_log.debug("Still running")
                 next_tasks.append(task)
             except Exception as err:
-                task_log.error(f"Completed unsuccessfully with error {err}")
+                task_log.error(f"Completed unsuccessfully with error: {err}")
 
         self.tasks = next_tasks
 
-    async def send(self, batch: List[dict]):
+    async def send(self, batch: List[dict]) -> dict:
         """ Given a batch of events, bulk-submits them to Elasticsearch
             via the client.
         """
 
+        client = await self.context["client"]
+
         # This is the bulk API response from Elasticsearch
-        response = await self.client.send(batch)
+        response = await client.send(batch)
 
         # Check for errors
         if response["errors"]:

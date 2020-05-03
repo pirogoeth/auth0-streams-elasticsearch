@@ -11,8 +11,9 @@ from aiomisc.service.aiohttp import AIOHTTPService
 from loguru import logger
 
 from .batcher import Batcher
-from .log_types import LOG_TYPES
+from .log import make_propagating_logger
 from .settings import Settings
+from .types import LOG_TYPES
 
 
 class ReceiverService(AIOHTTPService):
@@ -25,7 +26,7 @@ class ReceiverService(AIOHTTPService):
 
     async def create_application(self) -> web.Application:
 
-        app = web.Application()
+        app = web.Application(logger=make_propagating_logger("aiohttp.access"))
         app.add_routes([
             web.post("/", self.handler),
         ])
@@ -41,8 +42,8 @@ class ReceiverService(AIOHTTPService):
         if request.body_exists and request.can_read_body:
             try:
                 events = await request.json(loads=ujson.loads)
-                task = asyncio.create_task(self.process_events(events))
-                task.add_done_callback(self.on_process_done)
+                task = self.loop.create_task(self.queue_events(events))
+                task.add_done_callback(self.on_queue_done)
 
                 return web.json_response(
                     {"message": "Received!"},
@@ -53,7 +54,7 @@ class ReceiverService(AIOHTTPService):
         else:
             return web.HTTPBadRequest()
 
-    async def process_events(self, events: List[dict]):
+    async def queue_events(self, events: List[dict]):
         """ Takes a list of events, transforms them, and inserts them into
             the batcher queue.
         """
@@ -61,8 +62,7 @@ class ReceiverService(AIOHTTPService):
         batcher: Batcher = await self.context["batcher"]
 
         events = map(self.transform_event, events.get("logs", []))
-        coros = [batcher.insert(evt) for evt in events]
-        return await asyncio.gather(*coros)
+        return await batcher.insert_many(events)
 
     def transform_event(self, event: dict) -> dict:
         """ Adds the long-form description of the type identifier,
@@ -76,8 +76,8 @@ class ReceiverService(AIOHTTPService):
 
         return event
 
-    def on_process_done(self, fut: asyncio.Future):
+    def on_queue_done(self, fut: asyncio.Future):
         """ Logs the result of the process events task.
         """
 
-        logger.info(f"Event process task complete: {fut.result()}")
+        logger.info(f"Event queuing task complete: {fut.result()}")
