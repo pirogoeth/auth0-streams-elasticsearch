@@ -99,12 +99,12 @@ class SenderService(aiomisc.Service):
             task_log = logger.bind(task=task)
             try:
                 result = task.result()
-                task_log.debug(f"Completed successfully with result: {result}")
+                task_log.bind(result=result).debug(f"Completed successfully")
             except asyncio.InvalidStateError:
                 task_log.debug("Still running")
                 next_tasks.append(task)
             except Exception as err:
-                task_log.error(f"Completed unsuccessfully with error: {err}")
+                task_log.bind(error=err).error(f"Completed unsuccessfully with error")
 
         self.tasks = next_tasks
 
