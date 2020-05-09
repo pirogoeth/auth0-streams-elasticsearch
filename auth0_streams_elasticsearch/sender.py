@@ -104,7 +104,7 @@ class SenderService(aiomisc.Service):
                 task_log.debug("Still running")
                 next_tasks.append(task)
             except Exception as err:
-                task_log.bind(error=err).error(f"Completed unsuccessfully with error")
+                task_log.bind(error=err).error(f"Completed unsuccessfully with errors")
 
         self.tasks = next_tasks
 
@@ -120,6 +120,31 @@ class SenderService(aiomisc.Service):
 
         # Check for errors
         if response["errors"]:
-            logger.bind(response=response).error("Elasticsearch encountered errors ingesting events")
+            raise BulkSendingError(response)
 
         return response
+
+
+class BulkSendingError(Exception):
+    """ Raised when Elasticsearch returns an error or errors 
+        for a bulk insertion
+    """
+
+    def __init__(self, response: dict):
+        self.errors = response["items"]
+
+    def __repr__(self):
+        description = ""
+        for item in self.errors:
+            item_id = item["index"]["_id"]
+            index = item["index"]
+            if not index.get("error"):
+                continue
+
+            error_type = index["error"]["type"]
+            error_reason = index["error"]["reason"]
+            description += f"\tError processing bulk item {item_id}: {error_type}\n\t\t{error_reason}\n\n"
+
+        return description
+
+    __str__ = __repr__
