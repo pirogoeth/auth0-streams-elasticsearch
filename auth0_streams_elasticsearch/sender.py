@@ -33,7 +33,7 @@ class SenderService(aiomisc.Service):
         logger.info("Sender started!")
 
         batcher: Batcher = await self.context["batcher"]
-        begin = time.monotonic()
+        begin = None
         while not self._stop.is_set():
             # During this loop, we need to keep track of time.
             # Each iteration, we will need to do a few things:
