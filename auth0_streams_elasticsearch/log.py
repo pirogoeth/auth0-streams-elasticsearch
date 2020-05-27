@@ -34,8 +34,8 @@ def make_propagating_logger(path: str) -> logging.Logger:
     """
 
     logger = logging.getLogger(path)
-    [logger.removeHandler(handler) for handler in logger.handlers]
-    logger.setLevel(logging.DEBUG)
+    list(map(logger.removeHandler, logger.handlers[:]))
+    list(map(logger.removeFilter, logger.filters[:]))
 
     return logger
 
@@ -44,11 +44,14 @@ def configure(settings: Settings):
     """ Install an intercepting handler on the root logger.
     """
 
-    log_level = logging._nameToLevel.get(settings.LOG_LEVEL, logging.INFO)
     root = logging.getLogger()
+
+    list(map(root.removeHandler, root.handlers[:]))
+    list(map(root.removeFilter, root.filters[:]))
+
+    log_level = logging._nameToLevel.get(settings.LOG_LEVEL, logging.INFO)
     root.setLevel(log_level)
     root.addHandler(InterceptHandler())
-    root.addHandler(logging.NullHandler())
 
     logger.remove()
     logger.add(sys.stdout, format="{message}", serialize=True)

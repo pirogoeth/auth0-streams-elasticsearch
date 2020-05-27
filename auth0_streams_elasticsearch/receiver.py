@@ -80,4 +80,4 @@ class ReceiverService(AIOHTTPService):
         """ Logs the result of the process events task.
         """
 
-        logger.info(f"Event queuing task complete: {fut.result()}")
+        logger.info(f"Event queuing task completed: {fut.result()}")
