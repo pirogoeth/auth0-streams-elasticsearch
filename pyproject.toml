@@ -7,7 +7,7 @@ license = "MIT"
 
 [tool.poetry.dependencies]
 python = "^3.8"
-aiohttp = "^3.6.2"
+aiohttp = "^3.8.5"
 aioelasticsearch = "^0.6.0"
 loguru = "^0.4.1"
 elasticsearch = ">=7.0.0,<8.0.0"
